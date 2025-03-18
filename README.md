@@ -18,3 +18,7 @@ Personal wallpaper collection as a Nix Flake!
         stylix.image = "${inputs.nix-wallpapers.wallpapers}/gokmedia-blend.png";
     }
     ```
+
+## TODO
+- [ ] Add function to replace spaces with `-` in filenames
+- [ ] Add function to make all filenames lowercase
