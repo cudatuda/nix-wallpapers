@@ -38,4 +38,24 @@ rec {
       );
     in
     attrs;
+
+  mkRenameImagesScript =
+    pkgs:
+    pkgs.writeShellScript "rename-images" ''
+      set -e
+      git diff --cached --name-only --diff-filter=ACM | grep '^wallpapers/.*\.\(png\|jpg\|jpeg\)$' | while read -r file; do
+        dir=$(dirname "$file")
+        base=$(basename "$file")
+        new_base=$(echo "$base" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+        if [ "$base" != "$new_base" ]; then
+          if [ -e "$dir/$new_base" ]; then
+            echo "Error: '$dir/$new_base' already exists, skipping rename of '$file'"
+          else
+            mv -v "$file" "$dir/$new_base"
+            git rm -f --cached "$file"
+            git add "$dir/$new_base"
+          fi
+        fi
+      done
+    '';
 }
