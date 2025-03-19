@@ -25,24 +25,15 @@ A Nix flake that provides structured access to wallpapers. This flake organizes 
     }
     ```
 
-## Structure
-The flake organizes wallpapers based on the directory structure. **The attribute structure exactly mirrors the directory structure of the images**, with file extensions removed from attribute names:
-```
-# Directory structure
-wallpapers/                           
-├── image-1.png                
-└── collection-1/
-    ├── image-2.png
-    └── ...
-
-# Corresponding attribute structure
-wallpapers                           
-├── image-1                    
-└── collection-1
-    ├── image-2
-    └── ...
-```
-This one-to-one mapping makes it intuitive to access any wallpaper based on its location in the directory structure.
+## How It Works
+- `flake.nix`: Defines the Flake and its outputs. It imports `lib.nix` and uses the *processImages* function to transform the `./wallpapers` directory into an **attribute set**.
+- `lib.nix`: Contains the logic for recursively processing directories. It:
+    - Reads the directory contents with `builtins.readDir`.
+    - Filters out *non-regular files* and *README.md*.
+    - Strips file extensions to create clean attribute names.
+    - Recursively processes subdirectories.
+    - Outputs an attribute set where each image is a Nix path.
+- `wallpapers/`: The directory containing the wallpaper images. Subdirectories like `tiles/` are preserved in the attribute set structure.
 
 ## TODO
 - [ ] Add function to replace spaces with `-` in filenames
