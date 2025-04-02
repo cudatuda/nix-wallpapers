@@ -34,7 +34,9 @@ A Nix flake that provides structured access to wallpapers. This flake organizes 
     - Recursively processes subdirectories.
     - Outputs an attribute set where each image is a Nix path.
 - `wallpapers/`: The directory containing the wallpaper images. Subdirectories like `tiles/` are preserved in the attribute set structure.
+- 
 
-## TODO
-- [ ] Add function to replace spaces with `-` in filenames
-- [ ] Add function to make all filenames lowercase
+## Adding images
+1. Place images into `wallpapers/` directory
+2. Run `nix develop` to enter *devShell* with pre-configured *git-hooks*
+3. Add and commit changes, filenames will be formatted automatically!
