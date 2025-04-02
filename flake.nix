@@ -4,7 +4,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     git-hooks.url = "github:cachix/git-hooks.nix";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs =
@@ -12,19 +11,31 @@
       self,
       nixpkgs,
       git-hooks,
-      flake-utils,
     }:
     let
       lib = import ./lib.nix;
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      forEachSupportedSystem =
+        f:
+        nixpkgs.lib.genAttrs supportedSystems (
+          system:
+          f {
+            pkgs = import nixpkgs { inherit system; };
+          }
+        );
     in
     {
       wallpapers = lib.processImages ./wallpapers;
     }
-    // flake-utils.lib.eachDefaultSystem (
-      system:
+    // forEachSupportedSystem (
+      { pkgs }:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
-        pre-commit-lib = git-hooks.lib.${system};
+        pre-commit-lib = git-hooks.lib.${pkgs.system};
       in
       {
         devShells.default = pkgs.mkShell {
@@ -34,7 +45,7 @@
             rename
             git
           ];
-          inherit (self.checks.${system}.pre-commit-check) shellHook;
+          inherit (self.checks.${pkgs.system}.pre-commit-check) shellHook;
         };
 
         checks.pre-commit-check = pre-commit-lib.run {
@@ -43,7 +54,7 @@
             rename-wallpapers = {
               enable = true;
               name = "rename-wallpapers";
-              entry = "${lib.mkRenameImagesScript pkgs}"; # Используем функцию из lib.nix
+              entry = "${lib.mkRenameImagesScript pkgs}";
               files = "^wallpapers/.*\\.(png|jpg|jpeg)$";
               pass_filenames = false;
               stages = [ "pre-commit" ];
