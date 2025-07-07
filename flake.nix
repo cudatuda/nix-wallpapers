@@ -26,41 +26,46 @@
           system:
           f {
             pkgs = import nixpkgs { inherit system; };
+            system = system;
           }
         );
     in
     {
       wallpapers = lib.processImages ./wallpapers;
-    }
-    // forEachSupportedSystem (
-      { pkgs }:
-      let
-        pre-commit-lib = git-hooks.lib.${pkgs.system};
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            bash
-            findutils
-            rename
-            git
-          ];
-          inherit (self.checks.${pkgs.system}.pre-commit-check) shellHook;
-        };
 
-        checks.pre-commit-check = pre-commit-lib.run {
-          src = ./.;
-          hooks = {
-            rename-wallpapers = {
-              enable = true;
-              name = "rename-wallpapers";
-              entry = "${lib.mkRenameImagesScript pkgs}";
-              files = "^wallpapers/.*\\.(png|jpg|jpeg)$";
-              pass_filenames = false;
-              stages = [ "pre-commit" ];
+      devShells = forEachSupportedSystem (
+        { pkgs, system }:
+        {
+          default = pkgs.mkShell {
+            buildInputs = with pkgs; [
+              bash
+              findutils
+              rename
+              git
+            ];
+            inherit (self.checks.${system}.pre-commit-check) shellHook;
+          };
+        }
+      );
+
+      checks = forEachSupportedSystem (
+        { pkgs, system }:
+        {
+          pre-commit-check = git-hooks.lib.${system}.run {
+            src = ./.;
+            hooks = {
+              rename-wallpapers = {
+                enable = true;
+                name = "rename-wallpapers";
+                entry = "${lib.mkRenameImagesScript pkgs}";
+                files = "^wallpapers/.*\\.(png|jpg|jpeg)$";
+                pass_filenames = false;
+                stages = [ "pre-commit" ];
+              };
             };
           };
-        };
-      }
-    );
+        }
+      );
+    };
+
 }
